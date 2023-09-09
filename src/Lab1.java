@@ -6,7 +6,8 @@ import java.util.concurrent.Semaphore;
 
 public class Lab1 {
 
-    public TSimInterface tsi = getInstance();
+    TSimInterface tsi = getInstance();
+    private Semaphore zoneA = new Semaphore(1,true);
 
     private class Train extends Thread {
         private final int id;
@@ -26,30 +27,55 @@ public class Lab1 {
         public void run() {
             speedUp();
 
-            while (true) {
+            try {
+                while (true) {
+                    SensorEvent sensor = tsi.getSensor(id);
+
+                    int x = sensor.getXpos();
+                    int y = sensor.getYpos();
+
+                    /*
+                    switch (coordinates){
+
+                        case zone a: zoneA(this);
+
+                        etc...
+
+                    }
+                    */
 
 
-        /*
-        track.getSensor(id);
-
-        while(!s.tryAcquire()){
-          stop();
-
-        }
-        speedUp();
-        track.getSensor(id);
-        s.release();
-
-
-         */
-
-
+                }
+            } catch (CommandException | InterruptedException e) {
+                throw new RuntimeException(e);
             }
 
-      /*
-      idea: use one sensor for switching to one direction
-      and then back again after a slight delay...
-       */
+                /*
+                SensorEvent sensor = tsi.getSensor(train.id);
+                
+                this gives us an object with the coordinates to the sensor,
+                we can check if they apply to the zone and continue if that
+                is the case...
+                
+                idea: get sensor first, use switch case to match sensor to specific zone
+                and let train
+                 */
+
+            /*
+            track.getSensor(id);
+
+            while(!s.tryAcquire()){
+            stop();
+            }
+            speedUp();
+            track.getSensor(id);
+            s.release();
+            */
+
+            /*
+            idea: use one sensor for switching to one direction
+            and then back again after a slight delay...
+            */
 
 
         }
@@ -89,6 +115,7 @@ public class Lab1 {
             } catch (InterruptedException ignored) {
             }
             reverseDir();
+            speedUp();
 
         }
 
@@ -114,45 +141,39 @@ public class Lab1 {
         train1.start();
         train2.start();
 
-        Semaphore s1 = new Semaphore(1, true);
+        /*
+        try {
+            //System.out.println("hellopppo");
+            //tsi.setSpeed(1,speed1);
+            //tsi.setSpeed(2,speed2);
+        }
+        catch (CommandException e) {
+            e.printStackTrace();    // or only e.getMessage() for the error
+            System.exit(1);
+        }
+        */
+    }
 
-        int counter = 0;
+
+    public void zoneA(Train train){
 
         try {
-            s1.acquire();
-
-
-            while (true) {  //The game-loop
-
-                tsi.getSensor(1);
-
-                if (counter == 0) {
-                    train1.slowDown();
-                    System.out.println("slowing down");
-
-                    counter = -1;
-                }
-
+            
+            train.slowDown();
+            while (!zoneA.tryAcquire()) {
             }
-        } catch (InterruptedException | CommandException e) {
+            train.speedUp();
+            tsi.getSensor(train.getTrainId());
+            zoneA.release();
 
+
+        } catch (CommandException | InterruptedException e) {
+            System.out.println(e.getMessage());
+            System.exit(1);
         }
 
-    /*
-    try {
-      //System.out.println("hellopppo");
-      //tsi.setSpeed(1,speed1);
-      //tsi.setSpeed(2,speed2);
-
-
-    }
-    catch (CommandException e) {
-      e.printStackTrace();    // or only e.getMessage() for the error
-      System.exit(1);
     }
 
-     */
-    }
 
 
     private class Zone {
@@ -171,10 +192,20 @@ public class Lab1 {
                  */
                 tsi.getSensor(train.id);
 
+                /*
+                SensorEvent sensor = tsi.getSensor(train.id);
 
+                this gives us an object with the coordinates to the sensor,
+                we can check if they apply to the zone and continue if that
+                is the case...
+
+                idea: get sensor first, use switch case to match sensor to specific zone
+                and let train
+                 */
+
+
+                train.slowDown();
                 while (!s.tryAcquire()) {
-                    train.slowDown();
-
                 }
                 train.speedUp();
                 tsi.getSensor(train.getTrainId());
