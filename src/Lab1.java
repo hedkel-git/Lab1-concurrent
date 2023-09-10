@@ -7,7 +7,71 @@ import java.util.concurrent.Semaphore;
 public class Lab1 {
 
     TSimInterface tsi = getInstance();
-    private Semaphore zoneA = new Semaphore(1,true);
+    private final Semaphore zoneA = new Semaphore(1,true);
+
+    private final Coordinate[] enter1 = {};
+
+    public Lab1(int speed1, int speed2) {
+
+        Train train1 = new Train(1, speed1);
+        Train train2 = new Train(2, speed2);
+
+        train1.start();
+        train2.start();
+    }
+
+    /*
+    try {
+        //System.out.println("hellopppo");
+        //tsi.setSpeed(1,speed1);
+        //tsi.setSpeed(2,speed2);
+    }
+    catch (CommandException e) {
+        e.printStackTrace();    // or only e.getMessage() for the error
+        System.exit(1);
+    }
+    */
+
+    public void zone1(Train train){
+
+        try {
+            train.slowDown();
+            while (!zoneA.tryAcquire()) {
+            }
+            train.speedUp();
+            tsi.getSensor(train.getTrainId());
+            zoneA.release();
+
+        } catch (CommandException | InterruptedException e) {
+            System.out.println(e.getMessage());
+            System.exit(1);
+        }
+
+    }
+
+    private class Coordinate{
+        public final int x;
+        public final int y;
+        public Coordinate(int x, int y){
+            this.x = x;
+            this.y = y;
+        }
+
+        public boolean equalsAny(Coordinate[] coords){
+            for (Coordinate c : coords) {
+                if(this == c){
+                    return true;
+                }
+            }
+            return false;
+        }
+        @Override
+        public boolean equals(Object o){
+            Coordinate c = (Coordinate) o;
+
+            return this.x == c.x && this.y == c.y;
+        }
+    }
 
     private class Train extends Thread {
         private final int id;
@@ -28,23 +92,44 @@ public class Lab1 {
             speedUp();
 
             try {
+                // a train is always looking for a sensor
                 while (true) {
                     SensorEvent sensor = tsi.getSensor(id);
 
-                    int x = sensor.getXpos();
-                    int y = sensor.getYpos();
+                    Coordinate c = new Coordinate(sensor.getXpos(), sensor.getYpos());
+
+                    // checking which zone the sensor's coordinate matches with
+
+                    if (c.equalsAny(enter1)){
+                        zone1(this);
+                    }
+                    /*
+
+                    //this may take too long...
+                    else if (c.equalsAny(enter2)){
+                        zone2(this);
+                    } else if (c.equalsAny(enter3)) {
+                        zone3(this);
+                    } else if (c.equalsAny(enter4)) {
+                        zone4(this);
+                    } else if (c.equalsAny(enter5)) {
+                        zone5(this);
+                    }
+
+                     */
 
                     /*
-                    switch (coordinates){
+                    switch (){
 
-                        case zone a: zoneA(this);
+                        case : zone1(this);
 
-                        etc...
+                        default:
+
+                        //case enterB: zoneB(this);
 
                     }
-                    */
 
-
+                     */
                 }
             } catch (CommandException | InterruptedException e) {
                 throw new RuntimeException(e);
@@ -52,11 +137,11 @@ public class Lab1 {
 
                 /*
                 SensorEvent sensor = tsi.getSensor(train.id);
-                
+
                 this gives us an object with the coordinates to the sensor,
                 we can check if they apply to the zone and continue if that
                 is the case...
-                
+
                 idea: get sensor first, use switch case to match sensor to specific zone
                 and let train
                  */
@@ -80,20 +165,9 @@ public class Lab1 {
 
         }
 
-        private void testing() {
-            try {
-                Thread.sleep(1000);
-                tsi.setSwitch(17, 7, SWITCH_RIGHT);
-                if (id == 1) {
-                    Thread.sleep(2500);
-                    tsi.setSwitch(17, 7, SWITCH_LEFT);
-                    //System.out.println("now");
-                    //stop();
-                }
-            } catch (CommandException | InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            System.out.println("done");
+        //will probably not be needed
+        public boolean getDir(){
+            return dir;
         }
 
         public void speedUp() {
@@ -110,10 +184,8 @@ public class Lab1 {
 
         public void stopAtStation() {
             slowDown();
-            try {
-                Thread.sleep(1000 + Math.abs(20 * topSpeed));
-            } catch (InterruptedException ignored) {
-            }
+            try {Thread.sleep(1000 + Math.abs(20 * topSpeed));}
+            catch (InterruptedException ignored) {}
             reverseDir();
             speedUp();
 
@@ -131,47 +203,22 @@ public class Lab1 {
                 System.exit(1);
             }
         }
-    }
 
-    public Lab1(int speed1, int speed2) {
-
-        Train train1 = new Train(1, speed1);
-        Train train2 = new Train(2, speed2);
-
-        train1.start();
-        train2.start();
-
-        /*
-        try {
-            //System.out.println("hellopppo");
-            //tsi.setSpeed(1,speed1);
-            //tsi.setSpeed(2,speed2);
-        }
-        catch (CommandException e) {
-            e.printStackTrace();    // or only e.getMessage() for the error
-            System.exit(1);
-        }
-        */
-    }
-
-
-    public void zoneA(Train train){
-
-        try {
-            
-            train.slowDown();
-            while (!zoneA.tryAcquire()) {
+        private void testing() {
+            try {
+                Thread.sleep(1000);
+                tsi.setSwitch(17, 7, SWITCH_RIGHT);
+                if (id == 1) {
+                    Thread.sleep(2500);
+                    tsi.setSwitch(17, 7, SWITCH_LEFT);
+                    //System.out.println("now");
+                    //stop();
+                }
+            } catch (CommandException | InterruptedException e) {
+                throw new RuntimeException(e);
             }
-            train.speedUp();
-            tsi.getSensor(train.getTrainId());
-            zoneA.release();
-
-
-        } catch (CommandException | InterruptedException e) {
-            System.out.println(e.getMessage());
-            System.exit(1);
+            System.out.println("done");
         }
-
     }
 
 
