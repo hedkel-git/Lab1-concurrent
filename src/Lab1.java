@@ -19,7 +19,7 @@ public class Lab1 {
         train1.start();
         train2.start();
     }
-    //thisis wronggg!!!!!!!
+   
     /*
     try {
         //System.out.println("hellopppo");
