@@ -5,17 +5,17 @@
 *.iml
 
 #ignore default map
-#Lab1.map
+Lab1.map
 
 #ignore MakeFile
-#Makefile
+Makefile
 
 #ignore .gitignore
 #.gitignore
 
 #ignore any changes to simulator
-#/src/TSim
+/src/TSim
 
 #ignore compiled files, similar to out directory
-#/bin
+/bin
 
