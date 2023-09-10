@@ -225,6 +225,7 @@ public class Lab1 {
 
         public void acquire(Train train) {
 
+            //helloworld
             try {
                 /*  change to specific sensor or area, something
                  *  that does not get activated by any sensor.
