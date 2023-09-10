@@ -19,10 +19,9 @@ public class Lab1 {
         train1.start();
         train2.start();
     }
-   
+
     /*
     try {
-        //System.out.println("hellopppo");
         //tsi.setSpeed(1,speed1);
         //tsi.setSpeed(2,speed2);
     }
