@@ -11,7 +11,7 @@ Lab1.map
 Makefile
 
 #ignore .gitignore
-#.gitignore
+.gitignore
 
 #ignore any changes to simulator
 /src/TSim
