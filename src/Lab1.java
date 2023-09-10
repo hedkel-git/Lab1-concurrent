@@ -36,8 +36,8 @@ public class Lab1 {
 
         try {
             train.slowDown();
-            while (!zoneA.tryAcquire()) {
-            }
+            zoneA.acquire();
+
             train.speedUp();
             tsi.getSensor(train.getTrainId());
             zoneA.release();
@@ -90,18 +90,23 @@ public class Lab1 {
 
         public void run() {
             speedUp();
-
+            lookForSensor();
+        }
+        
+        public void lookForSensor(){
+            
             try {
                 // a train is always looking for a sensor
                 while (true) {
+
                     SensorEvent sensor = tsi.getSensor(id);
 
                     Coordinate c = new Coordinate(sensor.getXpos(), sensor.getYpos());
 
                     // checking which zone the sensor's coordinate matches with
-
                     if (c.equalsAny(enter1)){
-                        zone1(this);
+                        //zone1(this);
+                        System.out.println();
                     }
                     /*
 
@@ -115,21 +120,8 @@ public class Lab1 {
                     } else if (c.equalsAny(enter5)) {
                         zone5(this);
                     }
-
                      */
 
-                    /*
-                    switch (){
-
-                        case : zone1(this);
-
-                        default:
-
-                        //case enterB: zoneB(this);
-
-                    }
-
-                     */
                 }
             } catch (CommandException | InterruptedException e) {
                 throw new RuntimeException(e);
