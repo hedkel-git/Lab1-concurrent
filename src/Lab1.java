@@ -28,10 +28,10 @@ public class Lab1 {
                                          new Coordinate(11,7), new Coordinate(11,8)};
 
     private final Coordinate[] enter2_3 = {new Coordinate(13, 7), new Coordinate(13, 8)};
-    private final Coordinate[] enter3_2 = {new Coordinate(11, 9), new Coordinate(11, 10)};
+    private final Coordinate[] enter3_2 = {new Coordinate(11, 9), new Coordinate(12, 10)};
 
-    private final Coordinate[] enter4_5 = {};
-    private final Coordinate[] enter5_4 = {};
+    private final Coordinate[] enter4_5 = {new Coordinate(8,9), new Coordinate(7,10)};
+    private final Coordinate[] enter5_4 = {new Coordinate(6,11), new Coordinate(5,13)};
 
 
     public Lab1(int speed1, int speed2) {
