@@ -13,7 +13,7 @@ Makefile
 #ignore .gitignore
 .gitignore
 
-#ignore any changes to simulator
+#ignore any changes to simulator and Main
 /src/TSim
 
 #ignore compiled files, similar to out directory
