@@ -7,12 +7,13 @@ import java.util.concurrent.Semaphore;
 public class Lab1 {
 
     TSimInterface tsi = getInstance();
+
+    //--The semaphores used for the different zones--//
     private final Semaphore zone1sem = new Semaphore(1, true);
     private final Semaphore zone2_3sem = new Semaphore(1, true);
     private final Semaphore zone4_5sem = new Semaphore(1, true);
 
-
-
+    //--The semaphores used for the possible shortcuts.--//
 
     //upper path lies between critical zone 2 and the path to the station above to it.
     private final Semaphore upperPath = new Semaphore(1, true);
@@ -21,24 +22,22 @@ public class Lab1 {
     private final Semaphore middlePath = new Semaphore(1, true);
 
     //lower path lies between critical zone 5 and the station next to it.
-    // is set to zero permits because it is occupied by train 2.
+    //lowerPath is set to zero because train 2 begins on it.
     private final Semaphore lowerPath = new Semaphore(0, true);
 
+    //--The coordinates of sensors that we need to keep track of.--//
 
     private final Coordinate[] enter1 = {new Coordinate(6, 5), new Coordinate(10,5),
                                          new Coordinate(11,7), new Coordinate(11,8)};
 
     private final Coordinate[] enter2_3 = {new Coordinate(14, 8), new Coordinate(14, 7)};
-    private final Coordinate[] enter3_2 = {new Coordinate(12, 9), new Coordinate(13, 10)};
+    private final Coordinate[] enter3_2 = {new Coordinate(11, 9), new Coordinate(12, 10)};
 
-    private final Coordinate[] enter4_5 = {new Coordinate( 7, 9), new Coordinate(6,10)};
+    private final Coordinate[] enter4_5 = {new Coordinate( 8, 9), new Coordinate(7,10)};
     private final Coordinate[] enter5_4 = {new Coordinate( 6,11), new Coordinate( 5,13)};
     private final Coordinate[] stations = {new Coordinate(13, 3), new Coordinate(13, 5),
                                            new Coordinate(12,11), new Coordinate(12,13)};
 
-
-    private final Coordinate[] switches = {new Coordinate(17,7), new Coordinate(15,9),
-                                           new Coordinate( 4,9), new Coordinate(3,11)};
 
     public Lab1(int speed1, int speed2) {
 
@@ -49,54 +48,23 @@ public class Lab1 {
 
         train1.start();
         train2.start();
-
-
     }
 
-    /*
-    try {
-        //System.out.println("hellopppo");
-        //tsi.setSpeed(1,speed1);
-        //tsi.setSpeed(2,speed2);
-    }
-    catch (CommandException e) {
-        e.printStackTrace();    // or only e.getMessage() for the error
-        System.exit(1);
-    }
-    */
 
-
-    public void testingSwitches(){
+    //looks for an active sensor,
+    //The reason we only look for active sensors (for the most part) is because
+    //our approach to this lab didn't consider the inactive sensors.
+    private void findActiveSensor(Train train){
         try {
-            Thread.sleep(2000);
-            tsi.setSwitch(17, 7, SWITCH_RIGHT);
-            Thread.sleep(2000);
-
-            tsi.setSwitch(15, 9, SWITCH_RIGHT);
-            Thread.sleep(2000);
-
-            tsi.setSwitch(4, 9, SWITCH_LEFT);
-            Thread.sleep(2000);
-
-            tsi.setSwitch(3, 11, SWITCH_LEFT);
-        } catch (CommandException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-
-    }
-
-    public void findActiveSensor(int trainId){
-        try {
-            if(tsi.getSensor(trainId).getStatus() == SensorEvent.INACTIVE){
-                tsi.getSensor(trainId);
+            if(tsi.getSensor(train.getTrainId()).getStatus() == SensorEvent.INACTIVE){
+                tsi.getSensor(train.getTrainId());
             }
         } catch (CommandException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void zone1(Train train) {
+    private void zone1(Train train) {
 
         try {
             //preemptively slowing down
@@ -109,7 +77,7 @@ public class Lab1 {
             train.speedUp();
 
             //look for sensor outside zone1 to signal when we release the zone
-            findActiveSensor(train.getTrainId());
+            findActiveSensor(train);
 
             zone1sem.release();
 
@@ -120,143 +88,25 @@ public class Lab1 {
     }
 
 
-    private void enterCriticalZone(Train train, Coordinate c, Path p) throws InterruptedException{
-
+    private void zone2_3(Train train, Coordinate c) throws InterruptedException {
         //preemptively slowing down
         train.slowDown();
 
-        try {
-            switch (p) {
-                case PATH2_3:
-
-                    //trying to get access to zone
-                    zone2_3sem.acquire();
-
-                    //checking if the previous path taken was the shorter or longer,
-                    //releases previous shorter path if so.
-                    if (c.equals(enter2_3[0])) {
-                        tsi.setSwitch(17, 7, SWITCH_LEFT);
-                        upperPath.release();
-                    } else {
-                        tsi.setSwitch(17, 7, SWITCH_RIGHT);
-                    }
-
-                    //entering the acquired zone and checking if the next short path is available.
-                    enteringZone(train, middlePath, switches[1],false);
-
-                    //releases zone.
-                    zone2_3sem.release();
-
-                case PATH3_2:
-                    zone2_3sem.acquire();
-
-                    if (c.equals(enter3_2[0])) {
-                        tsi.setSwitch(15, 9, SWITCH_RIGHT);
-                        middlePath.release();
-                    } else {
-                        tsi.setSwitch(15, 9, SWITCH_LEFT);
-                    }
-
-                    enteringZone(train, upperPath, switches[0],true);
-                    zone2_3sem.release();
-                case PATH4_5:
-                    zone4_5sem.acquire();
-
-                    //not done, check switch at 4
-                    if (c.equals(enter4_5[0])) {
-                        tsi.setSwitch(4, 9, SWITCH_LEFT);
-                        middlePath.release();
-                    } else {
-                        tsi.setSwitch(4, 9, SWITCH_RIGHT);
-                    }
-
-                    enteringZone(train, lowerPath, switches[3], true);
-                    zone4_5sem.release();
-                case PATH5_4:
-                    zone4_5sem.acquire();
-
-                    //not done, check switch at 5
-                    if (c.equals(enter5_4[0])) {
-                        tsi.setSwitch(3, 11, SWITCH_LEFT);
-                        lowerPath.release();
-                    } else {
-                        tsi.setSwitch(3, 11, SWITCH_RIGHT);
-                    }
-
-
-                    enteringZone(train, middlePath, switches[2], true);
-                    zone4_5sem.release();
-            }
-        }
-        catch (CommandException e) {
-            throw new RuntimeException(e);
-        }
-
-
-
-
-
-    }
-
-  //  checkShortPath(middlePath,15,9,false);
-    private void enteringZone(Train train, Semaphore nextShortPath, Coordinate switcH, boolean dir){
-
-        train.speedUp();
-        findActiveSensor(train.getTrainId());
-        checkShortPath(nextShortPath,switcH.getX(),switcH.getY(),dir);
-        findActiveSensor(train.getTrainId());
-
-    }
-
-    private void checkShortPath(Semaphore path, int x, int y, boolean dir){
-
-        int fst;
-        int snd;
-
-        if(dir){
-            fst = SWITCH_LEFT;
-            snd = SWITCH_RIGHT;
-        }
-        else {
-            fst = SWITCH_RIGHT;
-            snd = SWITCH_LEFT;
-        }
-
-        try {
-            if (path.tryAcquire()) {
-                tsi.setSwitch(x,y, fst);
-            } else {
-                tsi.setSwitch(x,y, snd);
-            }
-        }
-        catch (CommandException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /*
-    private void zone2_3(Train train, Coordinate c) throws InterruptedException {
-        train.slowDown();
-
-        System.out.println("Trying to enter zone2_3: " + train.getTrainId());
+        //trying to get zone
         zone2_3sem.acquire();
+
+        //entering zone
         hasEnteredZone2_3(train, c);
     }
 
     private void hasEnteredZone2_3(Train train, Coordinate c) {
         try {
-            //
-            //hur vet vi om vi ska switcha upp eller ner?
-            //vi vet det beroende på vilken sensor det var som aktiverades
-            //
-
             // if shortest path was taken
             if (c.equals(enter2_3[0])) {
                 tsi.setSwitch(17, 7, SWITCH_LEFT);
                 upperPath.release();
             }
             else {
-                //System.out.println("switching for longer path train1");
                 tsi.setSwitch(17, 7, SWITCH_RIGHT);
             }
             train.speedUp();
@@ -265,21 +115,29 @@ public class Lab1 {
             //middle path lies between critical zone 3 and 4.
             findActiveSensor(train);
 
-            checkShortPath(middlePath,15,9,false);
+            if (middlePath.tryAcquire()) {
+                tsi.setSwitch(15, 9, SWITCH_RIGHT);
+            } else {
+                tsi.setSwitch(15, 9, SWITCH_LEFT);
+            }
 
-            //look for sensor to know when to release zone2_3
+            //look for sensor to know when to release zone
             findActiveSensor(train);
 
+            //releasing zone
             zone2_3sem.release();
         } catch (CommandException e) {
             System.out.println(e.getMessage());
         }
     }
 
-    public void zone3_2(Train train, Coordinate c)  throws InterruptedException{
+    /*
+    All of the remaining zones and ways to enter zones from
+    other directions use the same template.
+     */
+    private void zone3_2(Train train, Coordinate c)  throws InterruptedException{
         train.slowDown();
 
-        System.out.println("Trying to enter zone3_2: " + train.getTrainId());
         zone2_3sem.acquire();
         hasEnteredZone3_2(train, c);
     }
@@ -297,7 +155,11 @@ public class Lab1 {
 
             findActiveSensor(train);
 
-            checkShortPath(upperPath,17,7,true);
+            if (upperPath.tryAcquire()) {
+                tsi.setSwitch(17, 7, SWITCH_LEFT);
+            } else {
+                tsi.setSwitch(17, 7, SWITCH_RIGHT);
+            }
 
             findActiveSensor(train);
 
@@ -307,12 +169,10 @@ public class Lab1 {
         }
     }
 
-    public void zone4_5(Train train, Coordinate c) throws InterruptedException{
+    private void zone4_5(Train train, Coordinate c) throws InterruptedException{
         train.slowDown();
-        System.out.println("Trying to enter zone4_5: " + train.getTrainId());
 
         zone4_5sem.acquire();
-
         hasEnteredZone4_5(train, c);
 
     }
@@ -330,7 +190,11 @@ public class Lab1 {
 
             findActiveSensor(train);
 
-            checkShortPath(lowerPath,3,11,true);
+            if (lowerPath.tryAcquire()) {
+                tsi.setSwitch(3, 11, SWITCH_LEFT);
+            } else {
+                tsi.setSwitch(3, 11, SWITCH_RIGHT);
+            }
 
             findActiveSensor(train);
 
@@ -341,19 +205,15 @@ public class Lab1 {
     }
 
 
-    public void zone5_4(Train train, Coordinate c) throws InterruptedException{
+    private void zone5_4(Train train, Coordinate c) throws InterruptedException{
         train.slowDown();
-
-        System.out.println("Trying to enter zone5_4: " + train.getTrainId());
 
         zone4_5sem.acquire();
         hasEnteredZone5_4(train,c);
     }
 
-
-    public void hasEnteredZone5_4(Train train, Coordinate c){
+    private void hasEnteredZone5_4(Train train, Coordinate c){
         try {
-            //is upper path was taken
             if (c.equals(enter5_4[0])) {
                 tsi.setSwitch(3, 11, SWITCH_LEFT);
                 lowerPath.release();
@@ -362,35 +222,19 @@ public class Lab1 {
             }
             train.speedUp();
 
-            //look for sensor to check if middle path is available
             findActiveSensor(train);
 
-            checkShortPath(middlePath,4,9,true);
+            if (middlePath.tryAcquire()) {
+                tsi.setSwitch(4, 9, SWITCH_LEFT);
+            } else {
+                tsi.setSwitch(4, 9, SWITCH_RIGHT);
+            }
 
             findActiveSensor(train);
 
             zone4_5sem.release();
         } catch (CommandException e) {
             System.out.println(e.getMessage());
-        }
-    }
-    */
-
-    private class Switch{
-        private final int x;
-        private final int y;
-        private final Coordinate c;
-        private final Semaphore s;
-
-        public Switch(int x, int y, Coordinate c, Semaphore s){
-            this.x = x;
-            this.y = y;
-            this.c = c;
-            this.s = s;
-        }
-
-        public void switchAccordingTo(Coordinate c){
-
         }
     }
 
@@ -403,14 +247,6 @@ public class Lab1 {
             this.y = y;
         }
 
-        public int getX() {
-            return x;
-        }
-
-        public int getY() {
-            return y;
-        }
-
         public boolean equalsAny(Coordinate[] coords) {
             for (Coordinate c : coords) {
                 if (this.equals(c)) {
@@ -419,23 +255,23 @@ public class Lab1 {
             }
             return false;
         }
-
         @Override
         public boolean equals(Object o) {
             Coordinate c = (Coordinate) o;
             return this.x == c.x && this.y == c.y;
-        }
-
-        @Override
-        public String toString() {
-            return "(" + x + ", " + y + ")";
         }
     }
 
     private class Train extends Thread {
         private final int id;
         private final int topSpeed;
+
+        //dir is a boolean representing the train's direction.
+        //true means forwards relative to itself, false means the opposite.
         private boolean dir;
+
+        // A boolean used to check if a train is
+        // going to stop at a station or not.
         private boolean hasLeftStation;
 
         public Train(int id, int speed) {
@@ -454,61 +290,35 @@ public class Lab1 {
             lookForSensor();
         }
 
+        //method used to make train look for sensors,
+        //so it knows which zone it is entering.
         public void lookForSensor() {
 
             try {
-
                 // a train is always looking for a sensor
                 while (true) {
-
-                    //System.out.println("back to looking for sensors again");
                     SensorEvent sensor = tsi.getSensor(id);
                     Coordinate c = new Coordinate(sensor.getXpos(), sensor.getYpos());
-                    Path p;
 
                     if(sensor.getStatus() == SensorEvent.ACTIVE){
-                        System.out.println("found active sensor");
                         // checking which zone the sensor's coordinate matches with
-                        // this may take too long...
                         if (c.equalsAny(enter1)) {
                             zone1(this);
                         } else if (c.equalsAny(enter2_3)) {
-
-                            p = Path.PATH2_3;
-
-                            enterCriticalZone(this,c,Path.PATH2_3);
-
-                            //zone2_3(this, c);
+                            zone2_3(this, c);
                         } else if (c.equalsAny(enter3_2)) {
-
-                            p = Path.PATH3_2;
-
-                            enterCriticalZone(this,c,Path.PATH3_2);
-
-                            //zone3_2(this, c);
+                            zone3_2(this, c);
                         } else if (c.equalsAny(enter4_5)) {
-
-                            p = Path.PATH4_5;
-
-                            System.out.println("Trying to enter zone4_5: " + id);
-                            enterCriticalZone(this,c,Path.PATH4_5);
-
-                            //zone4_5(this, c);
+                            zone4_5(this, c);
                         } else if (c.equalsAny(enter5_4)) {
-
-
-                            System.out.println("Trying to enter zone5_4: " + id);
-                            enterCriticalZone(this,c,Path.PATH5_4);
-                            //zone5_4(this, c);
+                            zone5_4(this, c);
                         }
                     }
                     else if (c.equalsAny(stations)){
-                        System.out.println("station found");
                         if(hasLeftStation) {
-                            System.out.println("stopping at station " + id);
                             stopAtStation();
-                        }
-                        else{
+                            hasLeftStation = false;
+                        } else{
                             hasLeftStation = true;
                         }
                     }
@@ -517,17 +327,6 @@ public class Lab1 {
             } catch (CommandException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
-
-                /*
-                SensorEvent sensor = tsi.getSensor(train.id);
-
-                this gives us an object with the coordinates to the sensor,
-                we can check if they apply to the zone and continue if that
-                is the case...
-
-                idea: get sensor first, use switch case to match sensor to specific zone
-                and let train
-                 */
         }
 
         public void speedUp() {
@@ -548,9 +347,10 @@ public class Lab1 {
                 Thread.sleep(1000 + Math.abs(20 * topSpeed));
             } catch (InterruptedException ignored) {}
             reverseDir();
-            hasLeftStation = false;
             speedUp();
         }
+
+        // reversing the direction of a train.
         private void reverseDir() {
             dir = !dir;
         }
@@ -563,12 +363,4 @@ public class Lab1 {
             }
         }
     }
-
-    private enum Path {
-        PATH2_3,
-        PATH3_2,
-        PATH4_5,
-        PATH5_4
-    }
-
 }
