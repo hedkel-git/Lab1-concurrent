@@ -28,9 +28,9 @@ public class Lab1 {
                                          new Coordinate(11,7), new Coordinate(11,8)};
 
     private final Coordinate[] enter2_3 = {new Coordinate(14, 8), new Coordinate(14, 7)};
-    private final Coordinate[] enter3_2 = {new Coordinate(11, 9), new Coordinate(12, 10)};
+    private final Coordinate[] enter3_2 = {new Coordinate(12, 9), new Coordinate(13, 10)};
 
-    private final Coordinate[] enter4_5 = {new Coordinate( 8, 9), new Coordinate(7,10)};
+    private final Coordinate[] enter4_5 = {new Coordinate( 7, 9), new Coordinate(6,10)};
     private final Coordinate[] enter5_4 = {new Coordinate( 6,11), new Coordinate( 5,13)};
     private final Coordinate[] stations = {new Coordinate(13, 3), new Coordinate(13, 5),
                                            new Coordinate(12,11), new Coordinate(12,13)};
@@ -104,6 +104,9 @@ public class Lab1 {
 
         try {
             train.slowDown();
+
+            System.out.println("Trying to enter zone1: " + train.getTrainId());
+
             zone1sem.acquire();
 
             train.speedUp();
@@ -122,6 +125,7 @@ public class Lab1 {
     public void zone2_3(Train train, Coordinate c) throws InterruptedException {
         train.slowDown();
 
+        System.out.println("Trying to enter zone2_3: " + train.getTrainId());
         zone2_3sem.acquire();
         hasEnteredZone2_3(train, c);
     }
@@ -139,7 +143,7 @@ public class Lab1 {
                 upperPath.release();
             }
             else {
-                System.out.println("switching for longer path train1");
+                //System.out.println("switching for longer path train1");
                 tsi.setSwitch(17, 7, SWITCH_RIGHT);
             }
             train.speedUp();
@@ -166,6 +170,7 @@ public class Lab1 {
     public void zone3_2(Train train, Coordinate c)  throws InterruptedException{
         train.slowDown();
 
+        System.out.println("Trying to enter zone3_2: " + train.getTrainId());
         zone2_3sem.acquire();
         hasEnteredZone3_2(train, c);
     }
@@ -199,6 +204,7 @@ public class Lab1 {
 
     public void zone4_5(Train train, Coordinate c) throws InterruptedException{
         train.slowDown();
+        System.out.println("Trying to enter zone4_5: " + train.getTrainId());
 
         zone4_5sem.acquire();
         hasEnteredZone4_5(train, c);
@@ -235,6 +241,8 @@ public class Lab1 {
 
     public void zone5_4(Train train, Coordinate c) throws InterruptedException{
         train.slowDown();
+
+        System.out.println("Trying to enter zone5_4: " + train.getTrainId());
 
         zone4_5sem.acquire();
         hasEnteredZone5_4(train,c);
@@ -328,12 +336,12 @@ public class Lab1 {
                 // a train is always looking for a sensor
                 while (true) {
 
-                    System.out.println("back to looking for sensors again");
+                    //System.out.println("back to looking for sensors again");
                     SensorEvent sensor = tsi.getSensor(id);
                     Coordinate c = new Coordinate(sensor.getXpos(), sensor.getYpos());
 
                     if(sensor.getStatus() == SensorEvent.ACTIVE){
-                        System.out.println("found sensor");
+                        System.out.println("found active sensor");
                         // checking which zone the sensor's coordinate matches with
                         // this may take too long...
                         if (c.equalsAny(enter1)) {
