@@ -8,14 +8,14 @@ public class Lab1 {
 
     TSimInterface tsi = getInstance();
 
-    //--The semaphores used for the different zones--//
+    //--The semaphores used for the different zones.--//
     private final Semaphore zone1sem = new Semaphore(1, true);
     private final Semaphore zone2_3sem = new Semaphore(1, true);
     private final Semaphore zone4_5sem = new Semaphore(1, true);
 
     //--The semaphores used for the possible shortcuts.--//
 
-    //upper path lies between critical zone 2 and the path to the station above to it.
+    //upper path lies between critical zone 2 and the shortest path to the station above to it.
     private final Semaphore upperPath = new Semaphore(1, true);
 
     //middle path lies between critical zone 3 and 4.
@@ -27,29 +27,24 @@ public class Lab1 {
 
     //--The coordinates of sensors that we need to keep track of.--//
 
+    private final Coordinate[] stations = {new Coordinate(13, 3), new Coordinate(13, 5),
+                                           new Coordinate(12,11), new Coordinate(12,13)};
     private final Coordinate[] enter1 = {new Coordinate(6, 5), new Coordinate(10,5),
                                          new Coordinate(11,7), new Coordinate(11,8)};
-
     private final Coordinate[] enter2_3 = {new Coordinate(14, 8), new Coordinate(14, 7)};
     private final Coordinate[] enter3_2 = {new Coordinate(11, 9), new Coordinate(12, 10)};
 
     private final Coordinate[] enter4_5 = {new Coordinate( 8, 9), new Coordinate(7,10)};
     private final Coordinate[] enter5_4 = {new Coordinate( 6,11), new Coordinate( 5,13)};
-    private final Coordinate[] stations = {new Coordinate(13, 3), new Coordinate(13, 5),
-                                           new Coordinate(12,11), new Coordinate(12,13)};
-
 
     public Lab1(int speed1, int speed2) {
 
         Train train1 = new Train(1, speed1);
         Train train2 = new Train(2, speed2);
 
-        //testingSwitches();
-
         train1.start();
         train2.start();
     }
-
 
     //looks for an active sensor,
     //The reason we only look for active sensors (for the most part) is because
@@ -132,7 +127,7 @@ public class Lab1 {
     }
 
     /*
-    All of the remaining zones and ways to enter zones from
+    All the remaining zones and ways to enter zones from
     other directions use the same template.
      */
     private void zone3_2(Train train, Coordinate c)  throws InterruptedException{
@@ -206,6 +201,7 @@ public class Lab1 {
 
 
     private void zone5_4(Train train, Coordinate c) throws InterruptedException{
+        System.out.println("zone5_4");
         train.slowDown();
 
         zone4_5sem.acquire();
@@ -239,16 +235,25 @@ public class Lab1 {
     }
 
     private class Coordinate {
-        public final int x;
-        public final int y;
+        private final int x;
+        private final int y;
 
         public Coordinate(int x, int y) {
             this.x = x;
             this.y = y;
         }
 
-        public boolean equalsAny(Coordinate[] coords) {
-            for (Coordinate c : coords) {
+        public int getX() {
+            return x;
+        }
+        public int getY() {
+            return y;
+        }
+
+        //Coomparing a coordinate to other coordinates in an array
+        //works like contains does for lists
+        public boolean equalsAny(Coordinate[] coordinates) {
+            for (Coordinate c : coordinates) {
                 if (this.equals(c)) {
                     return true;
                 }
@@ -258,7 +263,7 @@ public class Lab1 {
         @Override
         public boolean equals(Object o) {
             Coordinate c = (Coordinate) o;
-            return this.x == c.x && this.y == c.y;
+            return this.x == c.getX() && this.y == c.getY();
         }
     }
 
@@ -293,7 +298,6 @@ public class Lab1 {
         //method used to make train look for sensors,
         //so it knows which zone it is entering.
         public void lookForSensor() {
-
             try {
                 // a train is always looking for a sensor
                 while (true) {
@@ -314,6 +318,9 @@ public class Lab1 {
                             zone5_4(this, c);
                         }
                     }
+                    // The reason we only check for stations with inactive sensors is
+                    // because we need the trains to stop after the sensor to make sure
+                    // that we know when a station has been entered and left.
                     else if (c.equalsAny(stations)){
                         if(hasLeftStation) {
                             stopAtStation();
