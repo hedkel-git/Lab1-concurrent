@@ -27,9 +27,9 @@ public class Lab1 {
 
     //--The coordinates of sensors that we need to keep track of.--//
 
-    private final Coordinate[] stations = {new Coordinate(13, 3), new Coordinate(13, 5),
+    private final Coordinate[] stations = {new Coordinate(12, 3), new Coordinate(12, 5),
                                            new Coordinate(12,11), new Coordinate(12,13)};
-    private final Coordinate[] enter1 = {new Coordinate(6, 5), new Coordinate(10,5),
+    private final Coordinate[] enter1 = {new Coordinate(6, 5), new Coordinate(9,5),
                                          new Coordinate(11,7), new Coordinate(11,8)};
     private final Coordinate[] enter2_3 = {new Coordinate(14, 8), new Coordinate(14, 7)};
     private final Coordinate[] enter3_2 = {new Coordinate(11, 9), new Coordinate(12, 10)};
@@ -127,8 +127,7 @@ public class Lab1 {
     }
 
     /*
-    All the remaining zones and ways to enter zones from
-    other directions use the same template.
+    All the remaining zones and ways to enter zones from use the same template.
      */
     private void zone3_2(Train train, Coordinate c)  throws InterruptedException{
         train.slowDown();
