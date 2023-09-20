@@ -498,7 +498,7 @@ public class Lab1 {
 
 
                             System.out.println("Trying to enter zone5_4: " + id);
-                            enterCriticalZone(this,c,P);
+                            enterCriticalZone(this,c,Path.PATH5_4);
                             //zone5_4(this, c);
                         }
                     }
